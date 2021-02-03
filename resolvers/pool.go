@@ -92,8 +92,7 @@ func (rp *resolverPool) nextResolver(ctx context.Context) Resolver {
 
 		rp.Lock()
 		idx := rp.curIdx
-		rp.curIdx++
-		rp.curIdx = rp.curIdx % len(rp.resolvers)
+		rp.curIdx = (rp.curIdx + 1) % len(rp.resolvers)
 		r = rp.resolvers[idx]
 		t, found := rp.waits[r.String()]
 		rp.Unlock()

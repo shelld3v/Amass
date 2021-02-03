@@ -5,10 +5,19 @@ name = "Wayback"
 type = "archive"
 
 function start()
-    setratelimit(1)
+    setratelimit(5)
 end
 
 function vertical(ctx, domain)
+    -- URL decode the response content
+    local hex_to_char = function(x)
+        return string.char(tonumber(x, 16))
+    end
+
+    local escape = function(content)
+        return content:gsub("%%(%x%x)", hex_to_char)
+    end
+
     local resp
     local vurl = buildurl(domain)
     local cfg = datasrc_config()
@@ -21,7 +30,7 @@ function vertical(ctx, domain)
     if (resp == nil or resp == "") then
         local err
 
-        resp, err = request({
+        resp, err = request(ctx, {
             url=vurl,
             headers={['Content-Type']="application/json"},
         })
@@ -34,11 +43,11 @@ function vertical(ctx, domain)
         end
     end
     
-    sendnames(ctx, resp)
+    sendnames(ctx, escape(resp))
 end
 
 function buildurl(domain)
-    return "http://web.archive.org/cdx/search/cdx?url=*." .. domain .. "&output=json&collapse=urlkey"
+    return "http://web.archive.org/cdx/search/cdx?url=" .. domain .. "&matchType=domain&fl=original&output=json&collapse=urlkey"
 end
 
 function sendnames(ctx, content)
